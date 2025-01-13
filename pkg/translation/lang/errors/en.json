@@ -1,0 +1,35 @@
+{
+  "errors": {
+    "serverError": "We're experiencing some technical difficulties. Please try again later.",
+    "serviceIsUnavailable": "Our service is currently unavailable. Please try again later.",
+    "permissionDenied": "You don't have permission to perform this action.",
+    "recordNotFound": "We couldn't find the resource you requested.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "isNotDeletable": "This item cannot be deleted.",
+    "noRowsEffected": "No rows were affected.",
+    "failedSendEmail": "Failed to send email. Please try again later.",
+
+    "userIsBanned": "Your account has been banned. If you believe this is a mistake, please contact support.",
+    "userInActive": "Your account is currently inactive. Please contact support for assistance.",
+    "userUnVerified": "Your account is not verified. Please check your email for the verification link or contact support if you need help.",
+    "emailRegistered": "An account with the email {{.email}} is already registered. What would you like to do?",
+    "credentialInvalid": "Invalid credentials. Please double-check and try again.",
+    "userLogout": "You have been logged out. Please log in again to continue.",
+    "passwordIsNull": "Invalid credentials. Please use the «Forgot Password» feature to reset your password.",
+
+    "invalidOTP": "The One-Time Password (OTP) you entered is invalid. Please try again or request a new OTP.",
+    "OTPExpired": "The One-Time Password (OTP) has expired. Please request a new OTP to continue.",
+
+    "flowTokenExpired": "The flow token has expired. Please initiate a new flow.",
+    "invalidFlowToken": "Invalid flow token. Please provide a valid flow token.",
+    "invalidToken": "Invalid token. Please provide a valid authentication token.",
+    "tokenExpired": "The token has expired. Please obtain a new authentication token.",
+
+    "invalidRequestBody": "Oops! There's an issue with the information you provided. Please check your request and try again.",
+
+    "roleExisted": "The role with enter Title already exists.",
+
+    "invalidTOTPCode": "The provided TOTP code is invalid or has expired. Please try again.",
+    "totpNotEnrolled": "TOTP is not currently set up for your account."
+  }
+}

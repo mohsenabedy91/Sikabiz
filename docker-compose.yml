@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16.3
+    container_name: postgres_test
+    env_file: ".env"
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "${DB_FORWARD_PORT:-5432}:5432"
+    restart: unless-stopped
+    networks:
+      - default
+      - app_network
+    environment:
+      - POSTGRES_USER=${DB_USERNAME:-test}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-test}
+      - POSTGRES_DB=${DB_NAME:-test}
+
+  rabbitmq:
+    image: rabbitmq-3-12-management
+    container_name: rabbitmq_test
+    env_file: ".env"
+    build:
+      context: .
+      dockerfile: docker/Dockerfile-Rabbitmq
+    restart: unless-stopped
+    ports:
+      - "${RABBITMQ_AMQP_FORWARD_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGE_FORWARD_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - default
+      - app_network
+
+volumes:
+  postgres:
+  rabbitmq_data:
+
+networks:
+  default:
+    driver: bridge
+  app_network:
+    driver: bridge
+    external: true

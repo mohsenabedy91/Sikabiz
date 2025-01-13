@@ -1,0 +1,37 @@
+{
+  "validation": {
+    "min": "يجب أن يكون {{.attribute}} على الأقل {{.min}}.",
+    "max": "يجب ألا يكون {{.attribute}} أكبر من {{.max}}.",
+    "required": "الحقل {{.attribute}} مطلوب.",
+    "email": "يجب أن يكون {{.attribute}} عنوان بريد إلكتروني صالح.",
+    "unique": "تم استخدام {{.attribute}} من قبل.",
+    "numeric": "يجب أن يكون {{.attribute}} رقماً.",
+    "alpha": "يجب أن يحتوي {{.attribute}} على أحرف فقط.",
+    "regex_alpha": "يجب أن لا يحتوي {{.attribute}} على أرقام أو أحرف خاصة.",
+    "dive": "يجب أن يكون {{.attribute}} صالحاً كـ {{.index}}.",
+    "uuid": "يجب أن يكون {{.attribute}} صالحاً.",
+    "date": "يجب أن يكون {{.attribute}} بتنسيق تاريخ صحيح (YYYY-MM-DD).",
+    "timeHourMinute": "يجب أن يكون {{.attribute}} بتنسيق وقت صحيح (HH:MM).",
+    "password_complexity": "يجب أن يحتوي {{.attribute}} على حرف كبير واحد على الأقل، وحرف صغير واحد على الأقل، ورقم واحد وحرف خاص واحد.",
+    "eqfield": "يجب أن يكون {{.attribute}} مساوياً لـ {{.eqfield}}.",
+    "token_length": "يجب أن يكون {{.attribute}} صالحاً.",
+    "role_title": "يجب أن يحتوي {{.attribute}} على أحرف وأرقام فقط.",
+    "oneof": "يجب أن يكون الحقل {{.attribute}} واحدًا من التالي: {{.oneof}}."
+  },
+  "attributes": {
+    "UUIDStr": "المعرف",
+    "FirstName": "الاسم الأول",
+    "LastName": "اسم العائلة",
+    "Email": "البريد الإلكتروني",
+    "Password": "كلمة المرور",
+    "ConfirmedPassword": "تأكيد كلمة المرور",
+    "Gender": "الجنس",
+    "Avatar": "الصورة الرمزية",
+    "Token": "رمز",
+    "AccessToken": "رمز الوصول",
+    "Title": "العنوان",
+    "Description": "الوصف",
+    "Permissions": "الأذونات",
+    "FlowToken": "رمز التدفق"
+  }
+}
