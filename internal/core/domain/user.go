@@ -4,9 +4,10 @@ type User struct {
 	Base
 	Modifier
 
-	Name        *string
+	FirstName   *string `json:"first_name"`
+	LastName    *string `json:"last_name"`
 	Email       string
-	PhoneNumber string
+	PhoneNumber string `json:"phone_number"`
 
 	Addresses []*Address
 }

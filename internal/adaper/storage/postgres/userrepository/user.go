@@ -23,7 +23,7 @@ func NewUserRepository(log logger.Logger, tx *sql.Tx) *UserRepository {
 
 func (r *UserRepository) GetByID(uuid uuid.UUID) (*domain.User, error) {
 	rows, err := r.tx.Query(
-		`SELECT u.uuid, u.name, u.email, u.phone_number, a.street, a.city, a.state, a.zip_code, a.country FROM users AS u 
+		`SELECT u.uuid, u.first_name, u.last_name, u.email, u.phone_number, a.street, a.city, a.state, a.zip_code, a.country FROM users AS u 
 				INNER JOIN addresses as a on u.id = a.user_id AND a.deleted_at IS NULL
                	WHERE u.deleted_at IS NULL AND u.uuid = $1 FOR UPDATE SKIP LOCKED`,
 		uuid,
@@ -48,7 +48,8 @@ func (r *UserRepository) GetByID(uuid uuid.UUID) (*domain.User, error) {
 		var address domain.Address
 		if err = rows.Scan(
 			&user.Base.UUID,
-			&user.Name,
+			&user.FirstName,
+			&user.LastName,
 			&user.Email,
 			&user.PhoneNumber,
 			&address.Street,

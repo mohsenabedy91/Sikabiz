@@ -18,8 +18,9 @@ type Address struct {
 }
 
 type User struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
+	ID          string    `json:"uuid"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
 	Email       string    `json:"email"`
 	PhoneNumber string    `json:"phone_number"`
 	Addresses   []Address `json:"addresses"`
@@ -45,7 +46,8 @@ func generateUsers(numUsers int) []User {
 
 		users[i] = User{
 			ID:          gofakeit.UUID(),
-			Name:        gofakeit.Name(),
+			FirstName:   gofakeit.FirstName(),
+			LastName:    gofakeit.LastName(),
 			Email:       gofakeit.Email(),
 			PhoneNumber: gofakeit.Phone(),
 			Addresses:   addresses,
