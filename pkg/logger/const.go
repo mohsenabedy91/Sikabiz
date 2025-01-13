@@ -40,8 +40,8 @@ const (
 )
 
 const (
-	InternalInfo SubCategory = "InternalInfo"
-
+	InternalInfo    SubCategory = "InternalInfo"
+	File            SubCategory = "File"
 	Startup         SubCategory = "Startup"
 	Shutdown        SubCategory = "Shutdown"
 	ExternalService SubCategory = "ExternalService"
