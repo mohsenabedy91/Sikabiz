@@ -31,12 +31,12 @@ func NewUserHandler(
 // @x-kong {"service": "user-management-http-service"}
 // @Security AuthBearer[READ_USER]
 // @Summary Get User
-// @Description Get User By ID
+// @Description Get User By UUID
 // @Tags User
 // @Accept json
 // @Produce json
 // @Param language path string true "language 2 abbreviations" default(en)
-// @Param userID path integer true "user id should be id"
+// @Param userID path string true "user id should be uuid"
 // @Success 200 {object} presenter.Response{data=presenter.User} "Successful response"
 // @Failure 400 {object} presenter.Error "Failed response"
 // @Failure 401 {object} presenter.Error "Unauthorized"
