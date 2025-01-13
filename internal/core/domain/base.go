@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type Modifier struct {
 	CreatedBy *uint64
@@ -9,7 +12,8 @@ type Modifier struct {
 }
 
 type Base struct {
-	ID uint64
+	ID   uint64
+	UUID uuid.UUID
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

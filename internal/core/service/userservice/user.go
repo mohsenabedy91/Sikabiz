@@ -1,6 +1,7 @@
 package userservice
 
 import (
+	"github.com/google/uuid"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/domain"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/port"
 	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
@@ -16,8 +17,8 @@ func New(log logger.Logger) *UserService {
 	}
 }
 
-func (r *UserService) GetByID(uow port.UserUnitOfWork, id uint64) (user *domain.User, err error) {
-	user, err = uow.UserRepository().GetByID(id)
+func (r *UserService) GetByID(uow port.UserUnitOfWork, uuidStr string) (user *domain.User, err error) {
+	user, err = uow.UserRepository().GetByID(uuid.MustParse(uuidStr))
 	if err != nil {
 		return nil, err
 	}

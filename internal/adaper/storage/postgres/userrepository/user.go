@@ -2,6 +2,7 @@ package userrepository
 
 import (
 	"database/sql"
+	"github.com/google/uuid"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/domain"
 	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
 	"github.com/mohsenabedy91/Sikabiz/pkg/metrics"
@@ -20,12 +21,12 @@ func NewUserRepository(log logger.Logger, tx *sql.Tx) *UserRepository {
 	}
 }
 
-func (r *UserRepository) GetByID(id uint64) (*domain.User, error) {
+func (r *UserRepository) GetByID(uuid uuid.UUID) (*domain.User, error) {
 	rows, err := r.tx.Query(
-		`SELECT u.id, u.name, u.email, u.phone_number, a.street, a.city, a.state, a.zip_code, a.country FROM users AS u 
+		`SELECT u.uuid, u.name, u.email, u.phone_number, a.street, a.city, a.state, a.zip_code, a.country FROM users AS u 
 				INNER JOIN addresses as a on u.id = a.user_id AND a.deleted_at IS NULL
-               	WHERE u.deleted_at IS NULL AND u.id = $1`,
-		id,
+               	WHERE u.deleted_at IS NULL AND u.uuid = $1 FOR UPDATE SKIP LOCKED`,
+		uuid,
 	)
 	if err != nil {
 		metrics.DbCall.WithLabelValues("users", "GetByID", "Failed").Inc()
@@ -46,7 +47,7 @@ func (r *UserRepository) GetByID(id uint64) (*domain.User, error) {
 	for rows.Next() {
 		var address domain.Address
 		if err = rows.Scan(
-			&user.Base.ID,
+			&user.Base.UUID,
 			&user.Name,
 			&user.Email,
 			&user.PhoneNumber,

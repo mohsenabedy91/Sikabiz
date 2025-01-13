@@ -45,7 +45,7 @@ func NewUserHandler(
 // @ID get_language_v1_users_userID
 // @Router /{language}/v1/users/{userID} [get]
 func (r UserHandler) Get(ctx *gin.Context) {
-	var userReq request.UserIDUri
+	var userReq request.UserUUIDUri
 	if err := ctx.ShouldBindUri(&userReq); err != nil {
 		presenter.NewResponse(ctx, r.trans).Validation(err).Echo(http.StatusUnprocessableEntity)
 		return
@@ -57,7 +57,7 @@ func (r UserHandler) Get(ctx *gin.Context) {
 		return
 	}
 
-	user, err := r.userService.GetByID(uowFactory, userReq.ID)
+	user, err := r.userService.GetByID(uowFactory, userReq.UUIDStr)
 	if err != nil {
 		if rErr := uowFactory.Rollback(); rErr != nil {
 			presenter.NewResponse(ctx, r.trans, StatusCodeMapping).Error(rErr).Echo()

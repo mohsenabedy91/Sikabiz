@@ -1,11 +1,14 @@
 package port
 
-import "github.com/mohsenabedy91/Sikabiz/internal/core/domain"
+import (
+	"github.com/google/uuid"
+	"github.com/mohsenabedy91/Sikabiz/internal/core/domain"
+)
 
 type UserRepository interface {
-	GetByID(id uint64) (*domain.User, error)
+	GetByID(id uuid.UUID) (*domain.User, error)
 }
 
 type UserService interface {
-	GetByID(uow UserUnitOfWork, id uint64) (*domain.User, error)
+	GetByID(uow UserUnitOfWork, id string) (*domain.User, error)
 }

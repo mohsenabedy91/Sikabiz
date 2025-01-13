@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	ID          uint64    `json:"id" example:"1"`
+	ID          string    `json:"id" example:"8f4a1582-6a67-4d85-950b-2d17049c7385"`
 	Name        *string   `json:"firstName,omitempty" example:"john doe"`
 	Email       string    `json:"email,omitempty" example:"john.doe@gmail.com"`
 	PhoneNumber string    `json:"phone_number,omitempty" example:"09121111111"`
@@ -18,7 +18,7 @@ func PrepareUser(user *domain.User) *User {
 	}
 
 	return &User{
-		ID:          user.Base.ID,
+		ID:          user.Base.UUID.String(),
 		Name:        user.Name,
 		Email:       user.Email,
 		PhoneNumber: user.PhoneNumber,
