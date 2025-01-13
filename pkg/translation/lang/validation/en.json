@@ -19,7 +19,8 @@
     "oneof": "The {{.attribute}} must be one of the following: {{.oneof}}."
   },
   "attributes": {
-    "UUIDStr": "Identifier",
+    "ID": "Identifier",
+    "Name": "Name",
     "FirstName": "First Name",
     "LastName": "Last Name",
     "Email": "Email",

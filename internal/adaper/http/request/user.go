@@ -1,5 +1,5 @@
 package request
 
 type UserIDUri struct {
-	ID uint64 `uri:"ID" binding:"required,number" example:"1"`
+	ID uint64 `uri:"userID" binding:"required,number" example:"1"`
 }

@@ -8,11 +8,11 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/mohsenabedy91/Sikabiz/internal/core/config"
+	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
 	"path"
 	"runtime"
 	"time"
-	"github.com/mohsenabedy91/Sikabiz/internal/core/config"
-	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
 )
 
 var dbClient *sql.DB
@@ -22,7 +22,7 @@ func InitClient(ctx context.Context, log logger.Logger, conf config.Config) erro
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s TimeZone=%s",
 		conf.DB.Host, conf.DB.Port, conf.DB.Username, conf.DB.Password,
 		conf.DB.Name, conf.DB.Postgres.SSLMode, conf.DB.Postgres.Timezone)
-	fmt.Println(dsn)
+
 	if dbClient, err = sql.Open("postgres", dsn); err != nil {
 		log.Error(logger.Database, logger.Startup, fmt.Sprintf("There is an Error in Open DB : %v", err), nil)
 		return err

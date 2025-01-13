@@ -2,8 +2,6 @@ package userrepository
 
 import (
 	"database/sql"
-	"errors"
-	"github.com/mohsenabedy91/Sikabiz/internal/adaper/storage/postgres"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/domain"
 	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
 	"github.com/mohsenabedy91/Sikabiz/pkg/metrics"
@@ -23,38 +21,59 @@ func NewUserRepository(log logger.Logger, tx *sql.Tx) *UserRepository {
 }
 
 func (r *UserRepository) GetByID(id uint64) (*domain.User, error) {
-	row := r.tx.QueryRow(
-		"SELECT id, name, email, phone_number FROM users WHERE deleted_at IS NULL AND id = $1",
+	rows, err := r.tx.Query(
+		`SELECT u.id, u.name, u.email, u.phone_number, a.street, a.city, a.state, a.zip_code, a.country FROM users AS u 
+				INNER JOIN addresses as a on u.id = a.user_id AND a.deleted_at IS NULL
+               	WHERE u.deleted_at IS NULL AND u.id = $1`,
 		id,
 	)
-	user, err := scanUser(row)
 	if err != nil {
-		metrics.DbCall.WithLabelValues("users", "GetByUUID", "Failed").Inc()
+		metrics.DbCall.WithLabelValues("users", "GetByID", "Failed").Inc()
 
 		r.log.Error(logger.Database, logger.DatabaseSelect, err.Error(), nil)
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, serviceerror.New(serviceerror.RecordNotFound)
+		return nil, serviceerror.NewServerError()
+	}
+
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			r.log.Error(logger.Database, logger.DatabaseSelect, err.Error(), nil)
 		}
+	}(rows)
+
+	var user domain.User
+	var addresses []*domain.Address
+
+	for rows.Next() {
+		var address domain.Address
+		if err = rows.Scan(
+			&user.Base.ID,
+			&user.Name,
+			&user.Email,
+			&user.PhoneNumber,
+			&address.Street,
+			&address.City,
+			&address.State,
+			&address.ZipCode,
+			&address.Country,
+		); err != nil {
+			metrics.DbCall.WithLabelValues("users", "GetByID", "Failed").Inc()
+
+			r.log.Error(logger.Database, logger.DatabaseSelect, err.Error(), nil)
+			return nil, serviceerror.NewServerError()
+		}
+
+		addresses = append(addresses, &address)
+	}
+
+	if err = rows.Err(); err != nil {
+		metrics.DbCall.WithLabelValues("users", "GetByID", "Failed").Inc()
+
+		r.log.Error(logger.Database, logger.DatabaseSelect, err.Error(), nil)
 		return nil, serviceerror.NewServerError()
 	}
 
 	metrics.DbCall.WithLabelValues("users", "GetByUUID", "Success").Inc()
 
+	user.Addresses = addresses
 	return &user, nil
-}
-
-func scanUser(scanner postgres.Scanner) (domain.User, error) {
-	var user domain.User
-	var name sql.NullString
-
-	if err := scanner.Scan(
-		&user.Base.ID,
-		&name,
-		&user.Email,
-		&user.PhoneNumber,
-	); err != nil {
-		return domain.User{}, err
-	}
-
-	return user, nil
 }

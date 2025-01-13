@@ -8,5 +8,5 @@ type User struct {
 	Email       string
 	PhoneNumber string
 
-	Addresses []Address
+	Addresses []*Address
 }
