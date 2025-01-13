@@ -13,7 +13,8 @@ type unitOfWork struct {
 	db  *sql.DB
 	tx  *sql.Tx
 
-	userRepository port.UserRepository
+	userRepository    port.UserRepository
+	addressRepository port.AddressRepository
 	// Add other repositories as needed
 }
 
@@ -34,6 +35,7 @@ func (r *unitOfWork) BeginTx(ctx context.Context) error {
 
 	r.tx = tx
 	r.userRepository = NewUserRepository(r.log, tx)
+	r.addressRepository = NewAddressRepository(r.log, tx)
 	// Initialize other repositories as needed
 
 	return nil
@@ -61,4 +63,8 @@ func (r *unitOfWork) Rollback() error {
 
 func (r *unitOfWork) UserRepository() port.UserRepository {
 	return r.userRepository
+}
+
+func (r *unitOfWork) AddressRepository() port.AddressRepository {
+	return r.addressRepository
 }

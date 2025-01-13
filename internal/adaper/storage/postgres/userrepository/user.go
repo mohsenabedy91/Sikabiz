@@ -79,3 +79,27 @@ func (r *UserRepository) GetByID(uuid uuid.UUID) (*domain.User, error) {
 	user.Addresses = addresses
 	return &user, nil
 }
+
+func (r *UserRepository) Save(user *domain.User) (uint64, error) {
+	var userID uint64
+	err := r.tx.QueryRow(
+		`INSERT INTO users (first_name, last_name, email, phone_number) 
+				VALUES ($1, $2, $3, $4) 
+				RETURNING id`,
+		user.FirstName,
+		user.LastName,
+		user.Email,
+		user.PhoneNumber,
+	).Scan(&userID)
+	if err != nil {
+		metrics.DbCall.WithLabelValues("users", "Save", "Failed").Inc()
+
+		r.log.Error(logger.Database, logger.DatabaseInsert, err.Error(), map[logger.ExtraKey]interface{}{
+			logger.InsertDBArg: user,
+		})
+		return userID, serviceerror.NewServerError()
+	}
+
+	metrics.DbCall.WithLabelValues("users", "Save", "Success").Inc()
+	return userID, nil
+}

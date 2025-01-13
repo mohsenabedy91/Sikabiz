@@ -14,5 +14,6 @@ type UserUnitOfWork interface {
 	UnitOfWork
 
 	UserRepository() UserRepository
+	AddressRepository() AddressRepository
 	// Add other repositories as needed
 }

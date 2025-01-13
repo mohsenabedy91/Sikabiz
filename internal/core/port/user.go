@@ -7,6 +7,7 @@ import (
 
 type UserRepository interface {
 	GetByID(id uuid.UUID) (*domain.User, error)
+	Save(user *domain.User) (uint64, error)
 }
 
 type UserService interface {
