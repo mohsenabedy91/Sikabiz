@@ -16,9 +16,14 @@ import (
 	"path"
 	"runtime"
 	"sync"
+	"time"
 )
 
 const WorkerCount = 10
+const maxRetries = 3
+const retryDelay = 2 * time.Second
+
+var timestampBackupFile = time.Now().Format("20060102_150405")
 
 func main() {
 	configProvider := &config.Config{}
@@ -80,25 +85,71 @@ func main() {
 
 				uow := uowFactory()
 				if txErr := uow.BeginTx(ctx); txErr != nil {
+					handleFailedPublish(u, saveUserEvent, log)
 					return
 				}
 
 				if createErr := userService.Create(uow, &user); createErr != nil {
 					if rollbackErr := uow.Rollback(); rollbackErr != nil {
+						handleFailedPublish(u, saveUserEvent, log)
 						return
 					}
 					return
 				}
 
 				if commitErr := uow.Commit(); commitErr != nil {
+					handleFailedPublish(u, saveUserEvent, log)
 					return
 				}
 				log.Info(logger.Database, logger.DatabaseInsert, "The user has been inserted successfully!", nil)
 			}(user)
 		default:
-			saveUserEvent.Publish(user)
+			handleFailedPublish(user, saveUserEvent, log)
 		}
 	}
 
 	wg.Wait()
+}
+
+func retry(attempts int, delay time.Duration, fn func() error) error {
+	for i := 0; i < attempts; i++ {
+		if err := fn(); err == nil {
+			return nil
+		}
+		time.Sleep(delay)
+	}
+	return fmt.Errorf("failed after %d attempts", attempts)
+}
+
+func handleFailedPublish(user domain.User, saveUserEvent *event.SaveUser, log logger.Logger) {
+	if err := retry(maxRetries, retryDelay, func() error {
+		return saveUserEvent.Publish(user)
+	}); err != nil {
+		log.Error(logger.Queue, logger.RabbitMQPublish, fmt.Sprintf("Failed to publish user: %v. Error: %v", user.ID, err), nil)
+
+		if backupErr := saveFailedDataToBackup(user); backupErr != nil {
+			log.Error(logger.Internal, logger.File, fmt.Sprintf("Failed to save user to backup: %v. Error: %v", user.ID, backupErr), nil)
+		}
+	}
+}
+
+func saveFailedDataToBackup(user domain.User) error {
+	backupFile := fmt.Sprintf("failed_users_%s.json", timestampBackupFile)
+
+	file, err := os.OpenFile(backupFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening backup file: %w", err)
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
+
+	encoder := json.NewEncoder(file)
+	if encodeErr := encoder.Encode(user); encodeErr != nil {
+		return fmt.Errorf("error writing to backup file: %w", encodeErr)
+	}
+	return nil
 }
