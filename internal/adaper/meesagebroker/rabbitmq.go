@@ -5,11 +5,18 @@ import (
 	"fmt"
 	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"sync"
+	"time"
 )
 
 type RabbitMQ struct {
-	conn *amqp.Connection
-	log  logger.Logger
+	conn         *amqp.Connection
+	log          logger.Logger
+	url          string
+	notifyClose  chan *amqp.Error
+	mu           sync.Mutex
+	consumers    map[string]func(message []byte) error
+	consumerLock sync.Mutex
 }
 
 func NewRabbitMQ(url string, log logger.Logger) (*RabbitMQ, error) {
@@ -18,10 +25,17 @@ func NewRabbitMQ(url string, log logger.Logger) (*RabbitMQ, error) {
 		return nil, err
 	}
 
-	return &RabbitMQ{
-		conn: conn,
-		log:  log,
-	}, nil
+	rmq := &RabbitMQ{
+		conn:        conn,
+		log:         log,
+		url:         url,
+		notifyClose: conn.NotifyClose(make(chan *amqp.Error)),
+		consumers:   make(map[string]func(message []byte) error),
+	}
+
+	go rmq.handleReconnect()
+
+	return rmq, nil
 }
 
 func (r *RabbitMQ) Close() {
@@ -41,6 +55,9 @@ func (r *RabbitMQ) Produce(name string, msg interface{}, delaySeconds int64) err
 		logger.QueueName: name,
 		logger.Body:      message,
 	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	channel, err := r.conn.Channel()
 	if err != nil {
@@ -110,14 +127,24 @@ func (r *RabbitMQ) Produce(name string, msg interface{}, delaySeconds int64) err
 }
 
 func (r *RabbitMQ) RegisterConsumer(name string, callback func(message []byte) error) error {
+	r.consumerLock.Lock()
+	defer r.consumerLock.Unlock()
 
+	r.consumers[name] = callback
+
+	return r.setupConsumer(name, callback)
+}
+
+func (r *RabbitMQ) setupConsumer(name string, callback func(message []byte) error) error {
 	extra := map[logger.ExtraKey]interface{}{
 		logger.QueueName: name,
 	}
 
+	r.mu.Lock()
 	channel, err := r.conn.Channel()
+	r.mu.Unlock()
 	if err != nil {
-		r.log.Error(logger.Queue, logger.RabbitMQProduce, fmt.Sprintf("Error create channel: %v", err), extra)
+		r.log.Error(logger.Queue, logger.RabbitMQRegisterConsumer, fmt.Sprintf("Error creating channel: %v", err), extra)
 		return err
 	}
 
@@ -193,4 +220,45 @@ func (r *RabbitMQ) RegisterConsumer(name string, callback func(message []byte) e
 	}()
 
 	return nil
+}
+
+func (r *RabbitMQ) handleReconnect() {
+	for {
+		err := <-r.notifyClose
+		if err != nil {
+			r.log.Error(logger.Queue, logger.RabbitMQ, fmt.Sprintf("Connection lost: %v", err), nil)
+
+			for {
+				r.log.Info(logger.Queue, logger.RabbitMQ, "Attempting to reconnect to RabbitMQ...", nil)
+				time.Sleep(5 * time.Second)
+
+				conn, dialErr := amqp.Dial(r.url)
+				if dialErr == nil {
+					r.mu.Lock()
+					r.conn = conn
+					r.notifyClose = conn.NotifyClose(make(chan *amqp.Error))
+					r.mu.Unlock()
+
+					r.log.Info(logger.Queue, logger.RabbitMQ, "Successfully reconnected to RabbitMQ", nil)
+
+					r.recoverConsumers()
+					break
+				}
+
+				r.log.Error(logger.Queue, logger.RabbitMQ, fmt.Sprintf("Reconnect failed: %v", err), nil)
+			}
+		}
+	}
+}
+
+func (r *RabbitMQ) recoverConsumers() {
+	r.consumerLock.Lock()
+	defer r.consumerLock.Unlock()
+
+	for name, callback := range r.consumers {
+		r.log.Info(logger.Queue, logger.RabbitMQRegisterConsumer, fmt.Sprintf("Re-registering consumer: %s", name), nil)
+		if err := r.setupConsumer(name, callback); err != nil {
+			r.log.Error(logger.Queue, logger.RabbitMQRegisterConsumer, fmt.Sprintf("Failed to re-register consumer %s: %v", name, err), nil)
+		}
+	}
 }
