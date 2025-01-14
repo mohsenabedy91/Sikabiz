@@ -25,3 +25,15 @@ func (r *UserService) GetByID(uow port.UserUnitOfWork, uuidStr string) (user *do
 
 	return user, nil
 }
+
+func (r *UserService) Create(uow port.UserUnitOfWork, user *domain.User) error {
+	userID, userErr := uow.UserRepository().Save(user)
+	if userErr != nil {
+		return userErr
+	}
+	if err := uow.AddressRepository().Save(userID, user.Addresses); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -13,9 +13,10 @@ import (
 )
 
 type SaveUser struct {
-	queue *messagebroker.Queue
-	log   logger.Logger
-	db    *sql.DB
+	queue       *messagebroker.Queue
+	log         logger.Logger
+	db          *sql.DB
+	userService port.UserService
 }
 
 var saveUserInstance *SaveUser
@@ -23,12 +24,13 @@ var saveUserInstance *SaveUser
 const DelaySaveUserSeconds int64 = 0
 const SaveUserName = "save_user_queue"
 
-func NewSaveUser(queue *messagebroker.Queue, log logger.Logger, db *sql.DB) *SaveUser {
+func NewSaveUser(queue *messagebroker.Queue, log logger.Logger, db *sql.DB, userService port.UserService) *SaveUser {
 	if saveUserInstance == nil {
 		saveUserInstance = &SaveUser{
-			queue: queue,
-			log:   log,
-			db:    db,
+			queue:       queue,
+			log:         log,
+			db:          db,
+			userService: userService,
 		}
 	}
 
@@ -70,16 +72,11 @@ func (r *SaveUser) Consume(message []byte) error {
 		return err
 	}
 
-	userID, userErr := uow.UserRepository().Save(&user)
-	if userErr != nil {
+	if err := r.userService.Create(uow, &user); err != nil {
 		if rollbackErr := uow.Rollback(); rollbackErr != nil {
 			return rollbackErr
 		}
-	}
-	if err := uow.AddressRepository().Save(userID, user.Addresses); err != nil {
-		if rollbackErr := uow.Rollback(); rollbackErr != nil {
-			return rollbackErr
-		}
+		return err
 	}
 
 	if commitErr := uow.Commit(); commitErr != nil {

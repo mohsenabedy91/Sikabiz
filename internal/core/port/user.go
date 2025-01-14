@@ -12,4 +12,5 @@ type UserRepository interface {
 
 type UserService interface {
 	GetByID(uow UserUnitOfWork, id string) (*domain.User, error)
+	Create(uow UserUnitOfWork, user *domain.User) error
 }

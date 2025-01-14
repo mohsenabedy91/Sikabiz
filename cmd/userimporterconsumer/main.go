@@ -8,6 +8,7 @@ import (
 	"github.com/mohsenabedy91/Sikabiz/internal/adaper/meesagebroker"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/config"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/event"
+	"github.com/mohsenabedy91/Sikabiz/internal/core/service/userservice"
 	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
 	"os"
 	"os/signal"
@@ -32,10 +33,11 @@ func main() {
 		return
 	}
 
+	userService := userservice.New(log)
 	log.Info(logger.Queue, logger.Startup, "Setup queue successfully", nil)
 
 	messagebroker.RegisterEvents(
-		event.NewSaveUser(queue, log, postgresDB),
+		event.NewSaveUser(queue, log, postgresDB, userService),
 		// add new queues here
 		// ...
 	)

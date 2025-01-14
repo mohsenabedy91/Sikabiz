@@ -10,6 +10,7 @@ import (
 	"github.com/mohsenabedy91/Sikabiz/internal/core/domain"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/event"
 	"github.com/mohsenabedy91/Sikabiz/internal/core/port"
+	"github.com/mohsenabedy91/Sikabiz/internal/core/service/userservice"
 	"github.com/mohsenabedy91/Sikabiz/pkg/logger"
 	"os"
 	"path"
@@ -60,7 +61,8 @@ func main() {
 		return
 	}
 
-	saveUserEvent := event.NewSaveUser(queue, log, db)
+	userService := userservice.New(log)
+	saveUserEvent := event.NewSaveUser(queue, log, db, userService)
 
 	uowFactory := func() port.UserUnitOfWork {
 		return userrepository.NewUnitOfWork(log, db)
@@ -81,18 +83,11 @@ func main() {
 					return
 				}
 
-				userID, userErr := uow.UserRepository().Save(&user)
-				if userErr != nil {
-					saveUserEvent.Publish(user)
+				if createErr := userService.Create(uow, &user); createErr != nil {
 					if rollbackErr := uow.Rollback(); rollbackErr != nil {
 						return
 					}
-				}
-				if addressSaveErr := uow.AddressRepository().Save(userID, user.Addresses); addressSaveErr != nil {
-					saveUserEvent.Publish(user)
-					if rollbackErr := uow.Rollback(); rollbackErr != nil {
-						return
-					}
+					return
 				}
 
 				if commitErr := uow.Commit(); commitErr != nil {
