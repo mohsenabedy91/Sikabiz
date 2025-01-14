@@ -28,19 +28,19 @@ func main() {
 	_, filename, _, _ := runtime.Caller(0)
 	sourceURL := path.Join(path.Dir(filename), "/../../users_data.json")
 
-	file, err := os.Open(sourceURL)
-	if err != nil {
-		log.Fatal(logger.Cache, logger.Startup, fmt.Sprintf("Error opening file: %v", err), nil)
+	file, fileErr := os.Open(sourceURL)
+	if fileErr != nil {
+		log.Fatal(logger.Cache, logger.Startup, fmt.Sprintf("Error opening file: %v", fileErr), nil)
 	}
 	defer func(file *os.File) {
-		fileErr := file.Close()
-		if fileErr != nil {
+		fileCloseErr := file.Close()
+		if fileCloseErr != nil {
 
 		}
 	}(file)
 
 	var users []domain.User
-	if decoderErr := json.NewDecoder(file).Decode(&users); err != nil {
+	if decoderErr := json.NewDecoder(file).Decode(&users); decoderErr != nil {
 		log.Error(logger.Internal, logger.File, fmt.Sprintf("Error parsing user: %v", decoderErr), nil)
 		return
 	}
@@ -48,16 +48,16 @@ func main() {
 	semaphore := make(chan struct{}, WorkerCount)
 	var wg sync.WaitGroup
 
-	queue, err := setup.InitializeQueue(log, conf)
-	if err != nil {
+	queue, queueErr := setup.InitializeQueue(log, conf)
+	if queueErr != nil {
 		return
 	}
 	defer queue.Driver.Close()
 
 	ctx := context.Background()
-	db, err := setup.InitializeDatabase(ctx, log, conf)
-	if err != nil {
-		log.Fatal(logger.Database, logger.Startup, err.Error(), nil)
+	db, databaseErr := setup.InitializeDatabase(ctx, log, conf)
+	if databaseErr != nil {
+		log.Fatal(logger.Database, logger.Startup, databaseErr.Error(), nil)
 		return
 	}
 
