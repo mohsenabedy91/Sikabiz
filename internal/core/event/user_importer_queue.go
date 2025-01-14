@@ -41,9 +41,9 @@ func (r *SaveUser) Name() string {
 	return SaveUserName
 }
 
-func (r *SaveUser) Publish(message interface{}) {
+func (r *SaveUser) Publish(message interface{}) error {
 	if err := r.queue.Driver.Produce(r.Name(), message, DelaySaveUserSeconds); err != nil {
-		return
+		return err
 	}
 	r.queue.Log.Info(
 		logger.Queue,
@@ -51,6 +51,8 @@ func (r *SaveUser) Publish(message interface{}) {
 		fmt.Sprintf("published successfully to queue: %s", message),
 		nil,
 	)
+
+	return nil
 }
 
 func (r *SaveUser) Consume(message []byte) error {
