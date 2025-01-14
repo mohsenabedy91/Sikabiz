@@ -114,9 +114,10 @@ func (r *RabbitMQ) Produce(name string, msg interface{}, delaySeconds int64) err
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        message,
-			Headers:     amqp.Table{"x-delay": delaySeconds * 1000},
+			ContentType:  "text/plain",
+			Body:         message,
+			Headers:      amqp.Table{"x-delay": delaySeconds * 1000},
+			DeliveryMode: amqp.Persistent,
 		},
 	); err != nil {
 		r.log.Error(logger.Queue, logger.RabbitMQProduce, fmt.Sprintf("Error Publish message: %v", err), extra)
