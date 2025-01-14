@@ -133,8 +133,13 @@ func handleFailedPublish(user domain.User, saveUserEvent *event.SaveUser, log lo
 	}
 }
 
+var fileMutex sync.Mutex
+
 func saveFailedDataToBackup(user domain.User) error {
 	backupFile := fmt.Sprintf("failed_users_%s.json", timestampBackupFile)
+
+	fileMutex.Lock()
+	defer fileMutex.Unlock()
 
 	file, err := os.OpenFile(backupFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
